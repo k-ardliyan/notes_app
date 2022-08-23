@@ -30,6 +30,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   sqflite: any
   path_provider: any
+  anim_search_bar: ^2.0.2
+  easy_search_bar: ^2.3.1
 
 dev_dependencies:
   flutter_test:
