@@ -111,6 +111,7 @@ class _HomePageState extends State<HomePage> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16),
           child: GridView.count(
+            physics: NeverScrollableScrollPhysics(),
             crossAxisCount: 2,
             children: <Widget>[
               Card(
