@@ -3,43 +3,53 @@ import 'package:notes_app/models/note.dart';
 
 class DetailPage extends StatefulWidget {
   final Note note;
-  DetailPage({this.note});
+  DetailPage(this.note);
+
   @override
-  _DetailPageState createState() => _DetailPageState();
+  _DetailPageState createState() => _DetailPageState(this.note);
 }
 
 class _DetailPageState extends State<DetailPage> {
+  Note note;
+  _DetailPageState(this.note);
+
   TextEditingController titleController = TextEditingController();
   TextEditingController contentController = TextEditingController();
 
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  void validateForm() {
-    FormState formState = _formKey.currentState;
-    ScaffoldState scaffoldState = _scaffoldKey.currentState;
-
-    if (formState.validate()) {
-      formState.save();
-      Note note = Note(
-        title: titleController.text,
-        content: contentController.text,
-        isArchived: false,
-        isPinned: false,
-        updatedAt: DateTime.now(),
-      );
-      Navigator.of(context).pop(note);
-    } else {
-      scaffoldState.showSnackBar(
-        SnackBar(
-          content: Text('Form tidak boleh kosong'),
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    if (note != null) {
+      titleController.text = note.title;
+      contentController.text = note.content;
+    }
+
+    void validateForm() {
+      FormState formState = _formKey.currentState;
+
+      if (formState.validate()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Note saved'),
+          ),
+        );
+        if (note == null) {
+          note = Note(
+            title: titleController.text,
+            content: contentController.text,
+            isArchived: false,
+            isPinned: false,
+            updatedAt: DateTime.now(),
+          );
+        } else {
+          note.title = titleController.text;
+          note.content = contentController.text;
+        }
+        Navigator.of(context).pop(note);
+      }
+    }
+
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.save),
@@ -63,7 +73,7 @@ class _DetailPageState extends State<DetailPage> {
         ),
       ),
       appBar: AppBar(
-        title: Text('Detail Page'),
+        title: note == null ? Text('Tambah Note') : Text('Detail Note'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -83,13 +93,12 @@ class _DetailPageState extends State<DetailPage> {
                   controller: contentController,
                   validator: (String value) {
                     if (value.isEmpty) {
-                      return 'Content is required';
+                      return 'Please enter some note';
                     }
                     return null;
                   },
                   decoration: InputDecoration(
-                    hintText: 'Enter your content here',
-                    // no border
+                    hintText: 'Enter your note here',
                     border: InputBorder.none,
                   ),
                   maxLines: 32,

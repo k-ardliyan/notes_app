@@ -1,5 +1,5 @@
 class Note {
-  String id;
+  int id;
   String title;
   String content;
   bool isPinned;
@@ -15,26 +15,38 @@ class Note {
     this.updatedAt,
   });
 
-  factory Note.fromJson(Map<String, dynamic> json) => Note(
-        id: json["id"],
-        title: json["title"],
-        content: json["content"],
-        isPinned: json["is_pinned"],
-        isArchived: json["is_archived"],
-        updatedAt: DateTime.parse(json["updated_at"]),
-      );
+  Note.map(Map<String, dynamic> obj) {
+    this.id = obj['id'];
+    this.title = obj['title'];
+    this.content = obj['content'];
+    this.isPinned = obj['isPinned'];
+    this.isArchived = obj['isArchived'];
+    this.updatedAt = DateTime.parse(obj['updatedAt']);
+  }
 
-  Map<String, dynamic> toJson() => {
-        "id": id,
-        "title": title,
-        "content": content,
-        "is_pinned": isPinned,
-        "is_archived": isArchived,
-        "updated_at": updatedAt.toIso8601String(),
-      };
+  // factory Note.fromJson(Map<String, dynamic> json) => Note(
+  //       id: json["id"],
+  //       title: json["title"],
+  //       content: json["content"],
+  //       isPinned: json["is_pinned"],
+  //       isArchived: json["is_archived"],
+  //       updatedAt: DateTime.parse(json["updated_at"]),
+  //     );
+
+  // Map<String, dynamic> toJson() => {
+  //       "id": id,
+  //       "title": title,
+  //       "content": content,
+  //       "is_pinned": isPinned,
+  //       "is_archived": isArchived,
+  //       "updated_at": updatedAt.toIso8601String(),
+  //     };
 
   Map<String, dynamic> toMap() {
     var map = Map<String, dynamic>();
+    if (id != null) {
+      map['id'] = id;
+    }
     map['id'] = id;
     map['title'] = title;
     map['content'] = content;
