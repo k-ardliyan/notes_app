@@ -26,31 +26,31 @@ class NotesDatabase {
 
   void _onCreate(Database db, int version) async {
     await db.execute(
-        'CREATE TABLE Notes(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, content TEXT, isPinned INTEGER, isArchived INTEGER, updatedAt TEXT)');
+        'CREATE TABLE notes (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, content TEXT, is_archived INTEGER, is_pinned INTEGER, updated_at TEXT)');
   }
 
   Future<int> insert(Note object) async {
     Database db = await this.initDb();
-    int result = await db.insert('Notes', object.toMap());
+    int result = await db.insert('notes', object.toMap());
     return result;
   }
 
   Future<List<Map<String, dynamic>>> select() async {
     Database db = await this.initDb();
-    var result = await db.query('Notes', orderBy: 'title');
+    var result = await db.query('notes', orderBy: 'title');
     return result;
   }
 
   Future<int> update(Note object) async {
     Database db = await this.initDb();
-    int result = await db.update('Notes', object.toMap(),
+    int result = await db.update('notes', object.toMap(),
         where: 'id = ?', whereArgs: [object.id]);
     return result;
   }
 
   Future<int> delete(int id) async {
     Database db = await this.initDb();
-    int result = await db.delete('Notes', where: 'id = ?', whereArgs: [id]);
+    int result = await db.delete('notes', where: 'id = ?', whereArgs: [id]);
     return result;
   }
 

@@ -15,6 +15,8 @@ class _DetailPageState extends State<DetailPage> {
 
   TextEditingController titleController = TextEditingController();
   TextEditingController contentController = TextEditingController();
+  int isArchived = 0;
+  int isPinned = 0;
 
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -38,8 +40,8 @@ class _DetailPageState extends State<DetailPage> {
           note = Note(
             title: titleController.text,
             content: contentController.text,
-            isArchived: false,
-            isPinned: false,
+            isArchived: isArchived,
+            isPinned: isPinned,
             updatedAt: DateTime.now(),
           );
         } else {
@@ -62,14 +64,42 @@ class _DetailPageState extends State<DetailPage> {
         padding: MediaQuery.of(context).viewInsets,
         child: BottomAppBar(
           notchMargin: 6,
-          color: Colors.greenAccent,
+          color: Colors.blue,
           shape: CircularNotchedRectangle(),
-          child: Container(
-            height: 40,
-            alignment: Alignment.center,
-            child: Text(
-                'Edited on ${DateTime.now().hour}:${DateTime.now().minute}'),
-          ),
+          child: IconTheme(
+              data: IconThemeData(color: Colors.white),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: isPinned == 0
+                        ? Icon(Icons.push_pin_outlined)
+                        : Icon(Icons.push_pin),
+                    onPressed: () {
+                      setState(() {
+                        isPinned = isPinned == 0 ? 1 : 0;
+                      });
+                    },
+                  ),
+                  IconButton(
+                    icon: isArchived == 0
+                        ? Icon(Icons.archive_outlined)
+                        : Icon(Icons.archive),
+                    onPressed: () {
+                      setState(() {
+                        isArchived = isArchived == 0 ? 1 : 0;
+                      });
+                    },
+                  ),
+                  Container(
+                    height: 40,
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Edited ${note != null ? (note.updatedAt.hour.toString() + ':' + note.updatedAt.minute.toString()) : DateTime.now().hour.toString() + ':' + DateTime.now().minute.toString()}',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              )),
         ),
       ),
       appBar: AppBar(

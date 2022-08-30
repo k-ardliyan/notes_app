@@ -7,6 +7,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   // search controller
@@ -21,13 +22,31 @@ class _HomePageState extends State<HomePage> {
   NotesDatabase _db = NotesDatabase();
   Note note;
   int count = 0;
+  int layoutColumn = 2;
   List<Note> noteList;
+  List<Note> noteListPinned;
+  List<Note> noteListNotPinned;
+  int countPinned = 0;
+  int countNotPinned = 0;
+
+  // save layout column
+  void saveLayoutColumn() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt('layoutColumn', layoutColumn);
+  }
+
+  // get layout column
+  void getLayoutColumn() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    layoutColumn = prefs.getInt('layoutColumn');
+  }
 
   @override
   Widget build(BuildContext context) {
     if (noteList == null) {
       noteList = List<Note>();
       updateListView();
+      getLayoutColumn();
     }
 
     Widget drawer() {
@@ -75,12 +94,12 @@ class _HomePageState extends State<HomePage> {
                 child: Align(
                   alignment: FractionalOffset.bottomCenter,
                   child: ListTile(
-                    leading: Icon(Icons.archive),
                     horizontalTitleGap: 0,
-                    title: Text('Archive'),
-                    onTap: () {
-                      Navigator.pushNamed(context, '/archive');
-                    },
+                    title: Text(
+                      'v.1.0.0',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    onTap: () {},
                   ),
                 ),
               ),
@@ -122,39 +141,61 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    Widget note() {
+    Widget noNote() {
+      return SliverPadding(
+        padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+        sliver: SliverToBoxAdapter(
+          child: Container(
+            alignment: Alignment.center,
+            child: Text(
+              'Tidak ada note',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w300,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget note(notes, countNotes) {
       return SliverPadding(
         padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         sliver: SliverMasonryGrid.count(
-          crossAxisCount: 2,
+          crossAxisCount: layoutColumn,
           mainAxisSpacing: 2,
           crossAxisSpacing: 2,
-          childCount: count,
+          childCount: countNotes,
           itemBuilder: (context, index) {
             return GestureDetector(
               child: Card(
-                color: Colors.orange[300],
+                color: notes[index].isPinned == 1
+                    ? Colors.blue[100]
+                    : Colors.blueGrey[50],
                 child: Container(
                   padding: EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      RichText(
-                        overflow: TextOverflow.ellipsis,
-                        text: TextSpan(
-                          text: '${noteList[index].title}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black,
+                      if (notes[index].title != '')
+                        RichText(
+                          overflow: TextOverflow.ellipsis,
+                          text: TextSpan(
+                            text: '${notes[index].title}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
-                      ),
                       SizedBox(
                         height: 4,
                       ),
                       Text(
-                        '${noteList[index].content}',
+                        '${notes[index].content}',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w300,
@@ -176,21 +217,41 @@ class _HomePageState extends State<HomePage> {
                           children: <Widget>[
                             ListTile(
                               leading: Icon(Icons.push_pin),
-                              title: Text('Pin'),
+                              title: notes[index].isPinned == 1
+                                  ? Text('Hapus dari pin')
+                                  : Text('Pin'),
                               onTap: () {
-                                Navigator.pop(context);
+                                setState(() {
+                                  if (notes[index].isPinned == 1) {
+                                    notes[index].isPinned = 0;
+                                  } else {
+                                    notes[index].isPinned = 1;
+                                  }
+                                  editNote(notes[index]);
+                                  Navigator.pop(context);
+                                });
                               },
                             ),
                             ListTile(
                               leading: Icon(Icons.archive),
-                              title: Text('Archive'),
+                              title: notes[index].isArchived == 1
+                                  ? Text('Hapus dari arsip')
+                                  : Text('Arsipkan'),
                               onTap: () {
-                                Navigator.pop(context);
+                                setState(() {
+                                  if (notes[index].isArchived == 1) {
+                                    notes[index].isArchived = 0;
+                                  } else {
+                                    notes[index].isArchived = 1;
+                                  }
+                                  editNote(notes[index]);
+                                  Navigator.pop(context);
+                                });
                               },
                             ),
                             ListTile(
                               leading: Icon(Icons.delete),
-                              title: Text('Delete'),
+                              title: Text('Hapus'),
                               onTap: () {
                                 // alert
                                 showDialog(
@@ -210,6 +271,7 @@ class _HomePageState extends State<HomePage> {
                                         TextButton(
                                           child: Text('Hapus'),
                                           onPressed: () {
+                                            deleteNote(notes[index]);
                                             Navigator.pop(context);
                                             Navigator.pop(context);
                                           },
@@ -252,24 +314,29 @@ class _HomePageState extends State<HomePage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
       bottomNavigationBar: BottomAppBar(
         notchMargin: 6,
-        color: Colors.grey,
+        color: Colors.blue,
         shape: CircularNotchedRectangle(),
         child: IconTheme(
-          data: IconThemeData(
-            color: Colors.black,
-          ),
+          data: IconThemeData(color: Colors.white),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               IconButton(
-                icon: Icon(Icons.menu),
+                icon: Icon(Icons.archive),
                 onPressed: () {
-                  _scaffoldKey.currentState.openDrawer();
+                  Navigator.pushNamed(context, '/archive');
                 },
               ),
               IconButton(
-                icon: Icon(Icons.search),
-                onPressed: () {},
+                icon: layoutColumn == 2
+                    ? Icon(Icons.view_module)
+                    : Icon(Icons.view_list),
+                onPressed: () {
+                  setState(() {
+                    layoutColumn = layoutColumn == 2 ? 1 : 2;
+                    saveLayoutColumn();
+                  });
+                },
               ),
             ],
           ),
@@ -279,20 +346,21 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: CustomScrollView(
           slivers: <Widget>[
-            // SliverStickyHeader.builder(
-            //   builder: (context, state) => Container(
-            //     height: 40.0,
-            //     color: (state.isPinned ? Colors.pink : Colors.lightBlue)
-            //         .withOpacity(1.0 - state.scrollPercentage),
-            //     padding: EdgeInsets.symmetric(horizontal: 16.0),
-            //     alignment: Alignment.centerLeft,
-            //     child: Text(
-            //       'Pinned Notes',
-            //       style: const TextStyle(color: Colors.white),
-            //     ),
-            //   ),
-            //   sliver: note(),
-            // ),
+            if (countPinned > 0)
+              SliverStickyHeader.builder(
+                builder: (context, state) => Container(
+                  height: 40.0,
+                  color: (state.isPinned ? Colors.pink : Colors.lightBlue)
+                      .withOpacity(1.0 - state.scrollPercentage),
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Pinned Notes',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+                sliver: note(noteListPinned, countPinned),
+              ),
             SliverStickyHeader.builder(
               builder: (context, state) => Container(
                 height: 40.0,
@@ -305,7 +373,9 @@ class _HomePageState extends State<HomePage> {
                   style: const TextStyle(color: Colors.white),
                 ),
               ),
-              sliver: note(),
+              sliver: countNotPinned > 0
+                  ? note(noteListNotPinned, countNotPinned)
+                  : noNote(),
             ),
           ],
         ),
@@ -350,6 +420,12 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           this.noteList = noteList;
           this.count = noteList.length;
+          this.noteListNotPinned =
+              noteList.where((note) => note.isPinned == 0).toList();
+          this.noteListPinned =
+              noteList.where((note) => note.isPinned == 1).toList();
+          this.countNotPinned = noteListNotPinned.length;
+          this.countPinned = noteListPinned.length;
         });
       });
     });
