@@ -25,6 +25,8 @@ class _DetailPageState extends State<DetailPage> {
     if (note != null) {
       titleController.text = note.title;
       contentController.text = note.content;
+      isArchived = note.isArchived;
+      isPinned = note.isPinned;
     }
 
     void validateForm() {
@@ -33,7 +35,8 @@ class _DetailPageState extends State<DetailPage> {
       if (formState.validate()) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Note saved'),
+            content: Text(
+                'Note tersimpan ${isArchived == 1 ? 'dan masuk arsip' : ''} ${isPinned == 1 ? 'dan terpin' : ''}'),
           ),
         );
         if (note == null) {
@@ -47,6 +50,9 @@ class _DetailPageState extends State<DetailPage> {
         } else {
           note.title = titleController.text;
           note.content = contentController.text;
+          note.isArchived = isArchived;
+          note.isPinned = isPinned;
+          note.updatedAt = DateTime.now();
         }
         Navigator.of(context).pop(note);
       }
@@ -73,20 +79,28 @@ class _DetailPageState extends State<DetailPage> {
                   IconButton(
                     icon: isPinned == 0
                         ? Icon(Icons.push_pin_outlined)
-                        : Icon(Icons.push_pin),
+                        : Icon(Icons.push_pin, color: Colors.red[800]),
                     onPressed: () {
                       setState(() {
-                        isPinned = isPinned == 0 ? 1 : 0;
+                        if (note == null) {
+                          isPinned = isPinned == 0 ? 1 : 0;
+                        } else {
+                          note.isPinned = isPinned == 0 ? 1 : 0;
+                        }
                       });
                     },
                   ),
                   IconButton(
                     icon: isArchived == 0
                         ? Icon(Icons.archive_outlined)
-                        : Icon(Icons.archive),
+                        : Icon(Icons.archive, color: Colors.yellow),
                     onPressed: () {
                       setState(() {
-                        isArchived = isArchived == 0 ? 1 : 0;
+                        if (note == null) {
+                          isArchived = isArchived == 0 ? 1 : 0;
+                        } else {
+                          note.isArchived = isArchived == 0 ? 1 : 0;
+                        }
                       });
                     },
                   ),

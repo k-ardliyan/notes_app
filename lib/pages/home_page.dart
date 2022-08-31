@@ -37,17 +37,24 @@ class _HomePageState extends State<HomePage> {
   // get layout column
   void getLayoutColumn() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    layoutColumn = prefs.getInt('layoutColumn');
+    if (prefs.getInt('layoutColumn') == null) {
+      layoutColumn = 2;
+    } else {
+      layoutColumn = prefs.getInt('layoutColumn');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (noteList == null) {
       noteList = List<Note>();
+      noteListPinned = List<Note>();
+      noteListNotPinned = List<Note>();
       updateListView();
       getLayoutColumn();
     } else {
       updateListView();
+      getLayoutColumn();
     }
 
     Widget drawer() {
@@ -259,6 +266,14 @@ class _HomePageState extends State<HomePage> {
                                         TextButton(
                                           child: Text('Hapus'),
                                           onPressed: () {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                    'Note berhasil dihapus'),
+                                                duration: Duration(seconds: 1),
+                                              ),
+                                            );
                                             deleteNote(notes[index]);
                                             Navigator.pop(context);
                                             Navigator.pop(context);
@@ -278,8 +293,7 @@ class _HomePageState extends State<HomePage> {
                 );
               },
               onTap: () async {
-                var note =
-                    await navigateToDetail(context, this.noteList[index]);
+                var note = await navigateToDetail(context, notes[index]);
                 if (note != null) editNote(note);
               },
             );
@@ -316,8 +330,12 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
               IconButton(
+                icon: Icon(Icons.sort_by_alpha),
+                onPressed: () {},
+              ),
+              IconButton(
                 icon: layoutColumn == 2
-                    ? Icon(Icons.view_module)
+                    ? Icon(Icons.dashboard)
                     : Icon(Icons.view_list),
                 onPressed: () {
                   setState(() {

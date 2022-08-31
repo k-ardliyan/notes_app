@@ -124,6 +124,12 @@ class _ArchivePageState extends State<ArchivePage> {
                                           child: Text('Hapus'),
                                           onPressed: () {
                                             deleteNote(notesListArchive[index]);
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(SnackBar(
+                                              content: Text(
+                                                  'Note telah dihapus dari daftar note'),
+                                              duration: Duration(seconds: 1),
+                                            ));
                                             Navigator.pop(context);
                                             Navigator.pop(context);
                                           },
