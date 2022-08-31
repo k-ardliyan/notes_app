@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:notes_app/models/note.dart';
 import 'package:notes_app/pages/detail_page.dart';
+import 'package:notes_app/models/note.dart';
 import 'package:notes_app/db/notes_database.dart';
 import 'dart:async';
 import 'package:sqflite/sqflite.dart';
-import 'package:anim_search_bar/anim_search_bar.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,6 +46,8 @@ class _HomePageState extends State<HomePage> {
       noteList = List<Note>();
       updateListView();
       getLayoutColumn();
+    } else {
+      updateListView();
     }
 
     Widget drawer() {
@@ -109,38 +110,6 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    Widget header() {
-      return Container(
-        height: 70,
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            // icon menu to open drawer
-            IconButton(
-              padding: EdgeInsets.all(0),
-              splashRadius: 24,
-              icon: Icon(Icons.menu),
-              onPressed: () => _scaffoldKey.currentState.openDrawer(),
-            ),
-            Expanded(
-              child: AnimSearchBar(
-                rtl: true,
-                width: 400,
-                textController: searchController,
-                closeSearchOnSuffixTap: true,
-                helpText: 'Cari judul note...',
-                onSuffixTap: () {
-                  setState(() {
-                    searchController.clear();
-                  });
-                },
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
     Widget noNote() {
       return SliverPadding(
         padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
@@ -172,7 +141,7 @@ class _HomePageState extends State<HomePage> {
             return GestureDetector(
               child: Card(
                 color: notes[index].isPinned == 1
-                    ? Colors.blue[100]
+                    ? Colors.red[100]
                     : Colors.blueGrey[50],
                 child: Container(
                   padding: EdgeInsets.all(16),
@@ -224,8 +193,21 @@ class _HomePageState extends State<HomePage> {
                                 setState(() {
                                   if (notes[index].isPinned == 1) {
                                     notes[index].isPinned = 0;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Note dihapus dari pin'),
+                                        duration: Duration(seconds: 1),
+                                      ),
+                                    );
                                   } else {
                                     notes[index].isPinned = 1;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            Text('Note ditambahkan ke pin'),
+                                        duration: Duration(seconds: 1),
+                                      ),
+                                    );
                                   }
                                   editNote(notes[index]);
                                   Navigator.pop(context);
@@ -245,6 +227,12 @@ class _HomePageState extends State<HomePage> {
                                     notes[index].isArchived = 1;
                                   }
                                   editNote(notes[index]);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Note berhasil diarsipkan'),
+                                      duration: Duration(seconds: 1),
+                                    ),
+                                  );
                                   Navigator.pop(context);
                                 });
                               },
@@ -420,10 +408,12 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           this.noteList = noteList;
           this.count = noteList.length;
-          this.noteListNotPinned =
-              noteList.where((note) => note.isPinned == 0).toList();
-          this.noteListPinned =
-              noteList.where((note) => note.isPinned == 1).toList();
+          this.noteListNotPinned = noteList
+              .where((note) => note.isPinned == 0 && note.isArchived == 0)
+              .toList();
+          this.noteListPinned = noteList
+              .where((note) => note.isPinned == 1 && note.isArchived == 0)
+              .toList();
           this.countNotPinned = noteListNotPinned.length;
           this.countPinned = noteListPinned.length;
         });
