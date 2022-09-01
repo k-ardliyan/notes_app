@@ -65,6 +65,17 @@ class _ArchivePageState extends State<ArchivePage> {
                           fontWeight: FontWeight.w300,
                         ),
                       ),
+                      SizedBox(
+                        height: 4,
+                      ),
+                      Text(
+                        '${notesListArchive[index].updatedAt.hour}:${notesListArchive[index].updatedAt.minute}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -96,6 +107,8 @@ class _ArchivePageState extends State<ArchivePage> {
                                         'Note telah kembali ke daftar note'),
                                     duration: Duration(seconds: 1),
                                   ));
+                                  notesListArchive[index].updatedAt =
+                                      DateTime.now();
                                   editNote(notesListArchive[index]);
                                   Navigator.pop(context);
                                 });
@@ -234,6 +247,10 @@ class _ArchivePageState extends State<ArchivePage> {
         setState(() {
           this.notesListArchive =
               noteList.where((note) => note.isArchived == 1).toList();
+          // sort by date
+          this
+              .notesListArchive
+              .sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
           this.countArchive = notesListArchive.length;
         });
       });

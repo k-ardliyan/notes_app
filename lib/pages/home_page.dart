@@ -177,6 +177,17 @@ class _HomePageState extends State<HomePage> {
                           fontWeight: FontWeight.w300,
                         ),
                       ),
+                      SizedBox(
+                        height: 4,
+                      ),
+                      Text(
+                        '${notes[index].updatedAt.hour}:${notes[index].updatedAt.minute}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -216,6 +227,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     );
                                   }
+                                  notes[index].updatedAt = DateTime.now();
                                   editNote(notes[index]);
                                   Navigator.pop(context);
                                 });
@@ -233,6 +245,8 @@ class _HomePageState extends State<HomePage> {
                                   } else {
                                     notes[index].isArchived = 1;
                                   }
+                                  notes[index].isPinned = 0;
+                                  notes[index].updatedAt = DateTime.now();
                                   editNote(notes[index]);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -329,10 +343,10 @@ class _HomePageState extends State<HomePage> {
                   Navigator.pushNamed(context, '/archive');
                 },
               ),
-              IconButton(
-                icon: Icon(Icons.sort_by_alpha),
-                onPressed: () {},
-              ),
+              // IconButton(
+              //   icon: Icon(Icons.sort_by_alpha),
+              //   onPressed: () {},
+              // ),
               IconButton(
                 icon: layoutColumn == 2
                     ? Icon(Icons.dashboard)
@@ -432,6 +446,13 @@ class _HomePageState extends State<HomePage> {
           this.noteListPinned = noteList
               .where((note) => note.isPinned == 1 && note.isArchived == 0)
               .toList();
+          // sort desc
+          this
+              .noteListNotPinned
+              .sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+          this
+              .noteListPinned
+              .sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
           this.countNotPinned = noteListNotPinned.length;
           this.countPinned = noteListPinned.length;
         });
